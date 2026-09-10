@@ -188,11 +188,6 @@
     </div>
 
     <script>
-        // Se já estiver logado nesta sessão, pula direto para o dashboard
-        if (sessionStorage.getItem('fitconsult_admin_logged') === 'true') {
-            window.location.href = 'dashboard.html';
-        }
-
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -202,32 +197,36 @@
 
             const password = passwordInput.value.trim();
 
-            if (password === 'jppoubel01') {
-                loginBtn.innerHTML = '<span class="loading">Entrando...</span>';
-                loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading">Entrando...</span>';
+            loginBtn.disabled = true;
+            errorMessage.style.display = 'none';
 
-                // Marca a sessão como autenticada (protege o acesso direto às demais páginas)
-                sessionStorage.setItem('fitconsult_admin_logged', 'true');
-
-                // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-            } else {
-                errorMessage.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-                passwordInput.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    passwordInput.style.animation = '';
-                }, 500);
-            }
-        });
-
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginForm').submit();
-            }
+            // A senha e verificada no servidor (api/login.mjs) - nunca fica no codigo do navegador
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            })
+                .then(function(response) {
+                    if (response.ok) {
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        return response.json().then(function() {
+                            throw new Error('Senha incorreta');
+                        });
+                    }
+                })
+                .catch(function() {
+                    errorMessage.style.display = 'block';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                    passwordInput.style.animation = 'shake 0.5s';
+                    loginBtn.innerHTML = 'Entrar no Painel';
+                    loginBtn.disabled = false;
+                    setTimeout(() => {
+                        passwordInput.style.animation = '';
+                    }, 500);
+                });
         });
 
         document.getElementById('password').focus();
