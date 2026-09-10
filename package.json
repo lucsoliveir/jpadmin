@@ -1,0 +1,33 @@
+{
+  "name": "fitconsult-admin-dashboard",
+  "version": "1.0.0",
+  "description": "Sistema administrativo para consultoria online de treinos e performance física",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "start": "http-server -p 8080",
+    "dev": "http-server -p 8080 -c-1",
+    "build": "echo 'No build step required for static site'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "admin",
+    "dashboard",
+    "fitness",
+    "consulting",
+    "health",
+    "wellness"
+  ],
+  "author": "FitConsult Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "http-server": "^14.1.0",
+    "@vercel/functions": "^3.9.3"
+  },
+  "devDependencies": {},
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

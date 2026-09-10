@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolução - FitConsult Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="db.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <h2>FitConsult</h2>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="alunos.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Alunos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="agenda.html" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Agenda</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="treinos.html" class="nav-link">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Treinos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="avaliacoes.html" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Avaliações</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="evolucao.html" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Evolução</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="financeiro.html" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Financeiro</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="relatorios.html" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="configuracoes.html" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <img src="https://via.placeholder.com/44" alt="Admin" class="admin-avatar">
+                <div class="admin-info">
+                    <h3>Administrador</h3>
+                    <p>Último acesso: hoje</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left">
+                <button class="sidebar-toggle-mobile" id="sidebarToggleMobile">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Evolução</h1>
+            </div>
+
+            <div class="header-right">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar aluno...">
+                    <i class="fas fa-search"></i>
+                </div>
+
+                <div class="notifications">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+
+                <div class="user-profile">
+                    <img src="https://via.placeholder.com/48" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Administrador</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <button id="logoutBtn" title="Sair" style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:0.9rem;">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard-content" style="padding: 30px;">
+            <div style="background: var(--glass); border-radius: var(--radius-lg); padding: 30px; text-align: center;">
+                <h2>📈 Sistema de Evolução</h2>
+                <p style="color: var(--ink-dim); margin-bottom: 30px;">
+                    Acompanhe a evolução dos alunos através de gráficos interativos e comparativos.
+                </p>
+
+                <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                    <div style="background: var(--glass-strong); border-radius: var(--radius-md); padding: 20px; text-align: center; min-width: 200px;">
+                        <h3>👥 Alunos com Histórico</h3>
+                        <p class="stat-value" id="studentsWithHistory">0</p>
+                    </div>
+                    <div style="background: var(--glass-strong); border-radius: var(--radius-md); padding: 20px; text-align: center; min-width: 200px;">
+                        <h3>📊 Avaliações Registradas</h3>
+                        <p class="stat-value" id="totalAssessments">0</p>
+                    </div>
+                </div>
+
+                <button id="viewEvolutionBtn" class="login-btn" style="margin-top: 30px; padding: 15px 30px;">
+                    <i class="fas fa-eye"></i> Ver Evolução do Aluno
+                </button>
+
+                <div style="margin-top: 30px; padding: 20px; background: var(--glass); border-radius: var(--radius-lg);">
+                    <h3>🔗 Integração com o Sistema</h3>
+                    <p style="color: var(--ink-dim);">
+                        Quando você registra qualquer alteração para um aluno:<br>
+                        • Os dados são salvos imediatamente no banco de dados<br>
+                        • Todos os gráficos são atualizados em tempo real<br>
+                        • O histórico completo fica disponível para consulta<br>
+                        • Fotos de evolução podem ser adicionadas e comparadas<br>
+                        • Metas são atualizadas com base no progresso real
+                    </p>
+
+                    <div style="margin-top: 15px; padding: 15px; background: var(--glass-strong); border-radius: var(--radius-md);">
+                        <h4 style="margin-top: 0;">💡 Dica:</h4>
+                        <p style="margin: 0; color: var(--ink-dim); font-size: 0.9rem;">
+                            A evolução é calculada automaticamente a partir de avaliações, medidas e
+                            registros de treino. Quanto mais dados você inserir, mais preciso será o acompanhamento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            updateNotificationCount();
+            setupEventListeners();
+        });
+
+        function loadStats() {
+            const students = db.getStudents();
+            const assessments = db.getAssessments();
+
+            // Count students with at least one assessment or measurement
+            const studentsWithHistory = students.filter(student =>
+                student.assessments && student.assessments.length > 0 ||
+                student.measurements && student.measurements.length > 0
+            ).length;
+
+            document.getElementById('studentsWithHistory').textContent = studentsWithHistory.toLocaleString('pt-BR');
+            document.getElementById('totalAssessments').textContent = assessments.length.toLocaleString('pt-BR');
+        }
+
+        function setupEventListeners() {
+            document.getElementById('viewEvolutionBtn').addEventListener('click', function() {
+                const students = db.getStudents();
+                if (students.length === 0) {
+                    alert('⚠️ Cadastre pelo menos um aluno antes de ver a evolução.');
+                    return;
+                }
+
+                const studentNames = students.map(s => `${s.id}: ${s.name}`).join('\n');
+                const studentIdStr = prompt(`Selecione o aluno pelo ID para ver sua evolução:\n\n${studentNames}`);
+
+                if (studentIdStr === null) return;
+
+                const studentId = parseInt(studentIdStr);
+                const student = db.getStudentById(studentId);
+
+                if (!student) {
+                    alert('❌ Aluno não encontrado.');
+                    return;
+                }
+
+                // Show evolution data
+                const assessments = student.assessments || [];
+                const measurements = student.measurements || [];
+
+                let evolutionText = `EVOLUÇÃO DO ALUNO: ${student.name}\n\n`;
+                evolutionText += `📊 Total de avaliações registradas: ${assessments.length}\n`;
+                evolutionText += `📏 Total de registros de medidas: ${measurements.length}\n\n`;
+
+                if (assessments.length > 0) {
+                    evolutionText += `ÚLTIMA AVALIAÇÃO:\n`;
+                    const latestAssessment = assessments.reduce((a, b) =>
+                        new Date(a.date) > new Date(b.date) ? a : b
+                    );
+                    evolutionText += `• Data: ${new Date(latestAssessment.date).toLocaleDateString('pt-BR')}\n`;
+                    evolutionText += `• Peso: ${latestAssessment.weight} kg\n`;
+                    evolutionText += `• % Gordura: ${latestAssessment.bodyFat}%\n`;
+                    evolutionText += `• Massa Muscular: ${latestAssessment.muscleMass} kg\n`;
+                    evolutionText += `• IMC: ${latestAssessment.imc.toFixed(1)}\n\n`;
+                }
+
+                if (measurements.length > 0) {
+                    evolutionText += `ULTIMAS MEDIDAS:\n`;
+                    const latestMeasurement = measurements.reduce((a, b) =>
+                        new Date(a.date) > new Date(b.date) ? a : b
+                    );
+                    evolutionText += `• Data: ${new Date(latestMeasurement.date).toLocaleDateString('pt-BR')}\n`;
+                    evolutionText += `• Peso: ${latestMeasurement.weight} kg\n`;
+                    evolutionText += `• Altura: ${latestMeasurement.height} cm\n`;
+                    evolutionText += `• Peito: ${latestMeasurement.measurements?.chest || 0} cm\n`;
+                    evolutionText += `• Cintura: ${latestMeasurement.measurements?.waist || 0} cm\n`;
+                    evolutionText += `• Quadril: ${latestMeasurement.measurements?.hips || 0} cm\n`;
+                }
+
+                if (assessments.length === 0 && measurements.length === 0) {
+                    evolutionText += `Nenhum dado de evolução encontrado para este aluno.\n\n`;
+                    evolutionText += `Para começar a acompanhar a evolução:\n`;
+                    evolutionText += `1. Registre avaliações periódicas em 'Avaliações'\n`;
+                    evolutionText += `2. Adicione medidas corporais nas avaliações\n`;
+                    evolutionText += `3. Registre fotos de evolução (em implementação futura)\n`;
+                    evolutionText += `4. Acompanhe o progresso através dos gráficos`;
+                }
+
+                alert(evolutionText);
+            });
+        }
+
+        function updateNotificationCount() {
+            const count = db.getNotifications().filter(n => !n.isRead).length;
+            document.getElementById('notificationCount').textContent = count;
+        }
+
+        // Sidebar toggle functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.style.width = '80px';
+                mainContent.style.marginLeft = '80px';
+                document.querySelectorAll('.sidebar-logo h2, .sidebar-nav .nav-link span, .sidebar-footer .admin-info').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                sidebar.style.width = '280px';
+                mainContent.style.marginLeft = '280px';
+                document.querySelectorAll('.sidebar-logo h2, .sidebar-nav .nav-link span, .sidebar-footer .admin-info').forEach(el => {
+                    el.style.display = 'block';
+                });
+            }
+        });
+
+        sidebarToggleMobile.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-open');
+            if (sidebar.classList.contains('mobile-open')) {
+                sidebar.style.width = '280px';
+                sidebar.style.visibility = 'visible';
+            } else {
+                sidebar.style.width = '0';
+                sidebar.style.visibility = 'hidden';
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!sidebar.contains(e.target) && !sidebarToggleMobile.contains(e.target) && sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                sidebar.style.width = '0';
+                sidebar.style.visibility = 'hidden';
+            }
+        });
+    
+        // Logout (encerra a sessao no servidor removendo o cookie)
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                fetch('/api/logout', { method: 'POST' }).finally(function() {
+                    window.location.href = 'index.html';
+                });
+            });
+        }
+</script>
+</body>
+</html>
