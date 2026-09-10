@@ -5,10 +5,15 @@
 ```
 /
 ├── index.html          → Site público (João Pedro - Treinamento & Consultoria)
-├── admin.html          → Atalho que redireciona para /admin/
+├── admin.html           → Atalho que redireciona para /admin/
+├── middleware.js        → Protege as páginas do painel no servidor
 ├── package.json
+├── .env.example          → Modelo das variáveis de ambiente (não sobe segredo nenhum)
+├── api/
+│   ├── login.mjs         → Verifica a senha no servidor e cria a sessão
+│   └── logout.mjs        → Encerra a sessão
 └── admin/
-    ├── index.html       → Tela de login do painel (senha: jppoubel01)
+    ├── index.html         → Tela de login do painel
     ├── dashboard.html
     ├── alunos.html
     ├── agenda.html
@@ -23,37 +28,65 @@
     └── db.js
 ```
 
-**Fluxo de acesso ao painel:**
-```
-seusite.com/admin  →  login (senha: jppoubel01)  →  dashboard e demais páginas
-```
+## 🔐 Como funciona o login agora
 
-## 🔧 O que foi corrigido nesta versão
+Diferente da primeira versão (onde a senha ficava escrita no JavaScript do navegador), agora:
 
-1. **`index.html` agora é o site institucional de verdade.** Antes, o arquivo que ficava na raiz (e por isso seria servido em `seusite.com/`) era uma cópia do dashboard do admin, sem nenhuma senha. Agora o site público fica na raiz e o painel inteiro foi movido para `/admin/`.
-2. **`db.js` agora é carregado em todas as páginas do painel.** Antes nenhuma página incluía esse script, então nenhuma delas conseguia ler ou salvar dados (erro "db is not defined").
-3. **Proteção de sessão.** Cada página do painel agora verifica, antes de carregar, se existe uma sessão de login ativa (`sessionStorage`). Se não existir, redireciona para a tela de login. Isso fecha a brecha de simplesmente digitar a URL de uma página interna (ex: `/admin/financeiro.html`) e acessar sem senha.
-4. **Botão "Sair"** adicionado no cabeçalho de todas as páginas do painel, encerra a sessão e volta para o login.
-5. **Ícones (Font Awesome) corrigidos.** O código antigo usava um ID de "Kit" do Font Awesome que era só um placeholder (`yourkitid`) e nunca carregava os ícones. Troquei pela versão gratuita via CDN pública (cdnjs), que não exige conta nem chave.
+1. Você digita a senha em `/admin/`.
+2. O navegador manda essa senha para `/api/login.mjs`, uma função que roda **no servidor da Vercel**, não no seu navegador.
+3. Essa função compara com a senha guardada na variável de ambiente `ADMIN_PASSWORD` (configurada só no painel da Vercel, nunca no código).
+4. Se bater, o servidor cria um cookie de sessão assinado (`fc_session`), válido por 12 horas, e só então libera o acesso.
+5. Toda vez que alguém tenta abrir uma página do painel (`dashboard.html`, `financeiro.html` etc.), o `middleware.js` verifica esse cookie **antes de entregar a página**. Sem cookie válido, a pessoa é redirecionada pro login — mesmo digitando a URL direto, e mesmo mexendo no navegador (diferente da versão anterior).
 
-## ⚠️ Limitações que continuam existindo (importante saber)
+**Resultado:** a senha não aparece em nenhum lugar do código-fonte, do repositório do GitHub ou do "Ver código-fonte" do navegador — só existe dentro da Vercel, como variável de ambiente.
 
-- **A senha do painel (`jppoubel01`) fica visível no código-fonte.** Isso é inevitável em qualquer site 100% estático (sem servidor/back-end): o navegador precisa ler a senha em algum lugar para comparar, e qualquer pessoa pode abrir o "Ver código-fonte" ou olhar o repositório no GitHub e encontrá-la. A proteção de sessão que adicionamos impede o acesso *casual* por URL direta, mas **não é segurança de verdade** contra alguém que queira especificamente entrar. Se você vai guardar dados sensíveis de alunos (financeiro, avaliações físicas), o recomendável no futuro é ter um back-end com autenticação real (ex: Vercel + banco de dados + login com senha criptografada).
-- **Os dados ficam salvos no `localStorage` do navegador**, ou seja, só no dispositivo/navegador onde você cadastrou. Não sincronizam entre celular e computador, e se limpar os dados do navegador, some tudo (a menos que exporte um backup em Configurações).
-- Se o repositório do GitHub for **público**, qualquer pessoa pode ver a senha só de olhar os arquivos. Se possível, deixe o repositório como **privado** no GitHub (a Vercel consegue fazer o deploy de repositórios privados normalmente).
+## ⚙️ Configuração obrigatória antes do primeiro deploy
 
-## 🚀 Como subir na Vercel via GitHub
+Sem isso, o painel bloqueia o acesso de todo mundo (por segurança, se as variáveis não existem o middleware nega tudo).
 
-1. Crie um repositório no GitHub (de preferência **privado**, pelo motivo explicado acima) e suba todos esses arquivos mantendo a estrutura de pastas (a pasta `admin/` precisa continuar como pasta).
-2. Na Vercel, clique em **"Add New" → "Project"** e importe esse repositório.
-3. Como é um site estático (HTML puro), pode deixar o **Framework Preset como "Other"** — não precisa de build command nem output directory especiais.
-4. Clique em **Deploy**.
-5. Depois de publicado:
-   - Site público: `https://seu-projeto.vercel.app/`
-   - Painel admin: `https://seu-projeto.vercel.app/admin/`
+1. Suba o projeto pro GitHub normalmente (pode ser repositório público ou privado — agora a senha não fica exposta em nenhum dos dois casos).
+2. Na Vercel, importe o repositório.
+3. Antes (ou depois) de fazer o deploy, vá em **Settings → Environment Variables** do projeto e adicione:
+   - `ADMIN_PASSWORD` → a senha que você quer usar pra entrar no painel
+   - `SESSION_SECRET` → uma string longa e aleatória (não precisa decorar, só precisa existir). Pra gerar uma boa, rode no terminal: `openssl rand -hex 32`
+4. Clique em **Deploy** (ou refaça o deploy, se já tiver feito antes de configurar as variáveis).
+
+Veja `.env.example` para o formato esperado.
+
+## 🚀 Deploy na Vercel via GitHub
+
+1. Suba todos esses arquivos ao GitHub mantendo a estrutura de pastas (`admin/` e `api/` precisam continuar como pastas).
+2. Na Vercel: **Add New → Project** → importe o repositório.
+3. Framework Preset: **Other** (não precisa de build command especial).
+4. Configure as variáveis de ambiente do passo anterior.
+5. Deploy.
+
+Depois de publicado:
+- Site público: `https://seu-projeto.vercel.app/`
+- Painel admin: `https://seu-projeto.vercel.app/admin/`
+
+## ⚠️ O que isso resolve e o que continua sendo limitação
+
+**Resolvido:** a senha não fica mais visível no código; acessar uma página do painel direto pela URL sem estar logado agora é bloqueado de verdade (no servidor, não só por JavaScript no navegador).
+
+**Continua sendo limitação:** os dados de alunos, treinos, pagamentos etc. **ainda ficam salvos no `localStorage` do navegador**, não em um banco de dados de verdade. Isso significa que:
+- Só aparecem no navegador/computador onde foram cadastrados (não sincronizam entre celular e computador, por exemplo);
+- Se limpar os dados do navegador, os dados do painel somem (a menos que você tenha exportado um backup em Configurações).
+
+Se no futuro você quiser que os dados fiquem disponíveis de qualquer aparelho, o próximo passo seria trocar o `localStorage` por um banco de dados de verdade (ex: Postgres via Vercel, Supabase) — isso é um projeto à parte, maior que essa correção.
 
 ## 💾 Backup dos dados
 
-Use a opção de exportação em **Configurações** dentro do painel para baixar um arquivo JSON com todos os dados cadastrados (alunos, treinos, avaliações, pagamentos etc.) regularmente, já que tudo fica salvo só no navegador.
+Use a opção de exportação em **Configurações** dentro do painel para baixar um JSON com todos os dados cadastrados regularmente, já que eles ficam só no navegador.
+
+## 🧪 Testando localmente (opcional)
+
+Se quiser testar antes de subir pra Vercel:
+
+```
+npm i -g vercel
+cp .env.example .env      # e preencha com valores de teste
+vercel dev
+```
 
 © 2026 FitConsult
