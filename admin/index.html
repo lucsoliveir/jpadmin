@@ -209,7 +209,7 @@
             })
                 .then(function(response) {
                     if (response.ok) {
-                        window.location.href = 'dashboard.html';
+                        window.location.href = '/admin/dashboard.html';
                     } else {
                         return response.json().then(function() {
                             throw new Error('Senha incorreta');

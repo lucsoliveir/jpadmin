@@ -6,6 +6,7 @@
     <title>Agenda - FitConsult Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="db.js"></script>
+    <script src="modal.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -309,49 +310,45 @@
             });
 
             // Add appointment button
-            document.getElementById('addAppointmentBtn').addEventListener('click', function() {
-                // Simple demonstration - in reality this would open a modal/form
+            document.getElementById('addAppointmentBtn').addEventListener('click', async function() {
                 const students = db.getStudents();
                 if (students.length === 0) {
                     alert('⚠️ Cadastre pelo menos um aluno antes de criar agendamentos.');
                     return;
                 }
 
-                const studentNames = students.map(s => `${s.id}: ${s.name}`).join('\n');
-                const studentIdStr = prompt(`Selecione o aluno pelo ID:\n\n${studentNames}`);
+                const typeOptions = ['Avaliação', 'Consultoria', 'Revisão de treino', 'Reavaliação', 'Atendimento online', 'Reunião'];
 
-                if (studentIdStr === null) return; // User cancelled
+                const result = await openModal({
+                    title: 'Novo agendamento',
+                    submitLabel: 'Criar agendamento',
+                    fields: [
+                        { name: 'studentId', label: 'Aluno', type: 'select', required: true, numeric: true, placeholder: 'Selecione o aluno',
+                          options: students.map(s => ({ value: s.id, label: s.name })) },
+                        { name: 'date', label: 'Data', type: 'date', required: true, value: new Date().toISOString().split('T')[0] },
+                        { name: 'time', label: 'Horário', type: 'time', required: true, value: '09:00' },
+                        { name: 'type', label: 'Tipo de atendimento', type: 'select', value: 'Consultoria',
+                          options: typeOptions.map(t => ({ value: t, label: t })) },
+                        { name: 'duration', label: 'Duração (minutos)', type: 'number', value: 60, min: 5, step: 5 },
+                        { name: 'observations', label: 'Observações', type: 'textarea', placeholder: 'Opcional' }
+                    ]
+                });
 
-                const studentId = parseInt(studentIdStr);
-                const student = db.getStudentById(studentId);
+                if (!result) return;
 
+                const student = db.getStudentById(result.studentId);
                 if (!student) {
                     alert('❌ Aluno não encontrado.');
                     return;
                 }
 
-                const date = prompt('Data do agendamento (AAAA-MM-DD):', new Date().toISOString().split('T')[0]);
-                if (!date) return;
-
-                const time = prompt('Horário (HH:MM):', '09:00');
-                if (!time) return;
-
-                const typeOptions = ['Avaliação', 'Consultoria', 'Revisão de treino', 'Reavaliação', 'Atendimento online', 'Reunião'];
-                const type = prompt(`Tipo de atendimento:\n${typeOptions.map((t, i) => `${i+1}. ${t}`).join('\n')}`, 'Consultoria');
-                if (!type) return;
-
-                const durationStr = prompt('Duração em minutos:', '60');
-                const duration = parseInt(durationStr) || 60;
-
-                const observations = prompt('Observações (opcional):') || '';
-
                 const newAppointment = {
                     studentId: student.id,
-                    date: date,
-                    time: time,
-                    type: type,
-                    duration: duration,
-                    observations: observations,
+                    date: result.date,
+                    time: result.time,
+                    type: result.type,
+                    duration: result.duration || 60,
+                    observations: result.observations || '',
                     status: 'Confirmado'
                 };
 

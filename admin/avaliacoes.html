@@ -6,6 +6,7 @@
     <title>Avaliações - FitConsult Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="db.js"></script>
+    <script src="modal.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -185,69 +186,82 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('addAssessmentBtn').addEventListener('click', function() {
+            document.getElementById('addAssessmentBtn').addEventListener('click', async function() {
                 const students = db.getStudents();
                 if (students.length === 0) {
                     alert('⚠️ Cadastre pelo menos um aluno antes de registrar avaliações.');
                     return;
                 }
 
-                const studentNames = students.map(s => `${s.id}: ${s.name}`).join('\n');
-                const studentIdStr = prompt(`Selecione o aluno pelo ID:\n\n${studentNames}`);
+                const result = await openModal({
+                    title: 'Nova avaliação',
+                    subtitle: 'Peso e altura são obrigatórios. O restante é opcional.',
+                    submitLabel: 'Registrar avaliação',
+                    fields: [
+                        { name: 'studentId', label: 'Aluno', type: 'select', required: true, numeric: true, placeholder: 'Selecione o aluno',
+                          options: students.map(s => ({ value: s.id, label: s.name })) },
+                        { name: 'date', label: 'Data da avaliação', type: 'date', required: true, value: new Date().toISOString().split('T')[0] },
 
-                if (studentIdStr === null) return;
+                        { name: 'weight', label: 'Peso (kg)', type: 'number', required: true, value: 80, step: 0.1, min: 0, section: 'Básico' },
+                        { name: 'height', label: 'Altura (cm)', type: 'number', required: true, value: 170, step: 0.1, min: 0 },
 
-                const studentId = parseInt(studentIdStr);
-                const student = db.getStudentById(studentId);
+                        { name: 'bodyFat', label: '% de gordura', type: 'number', value: 15, step: 0.1, min: 0, section: 'Composição corporal' },
+                        { name: 'muscleMass', label: 'Massa muscular (kg)', type: 'number', value: 0, step: 0.1, min: 0 },
 
+                        { name: 'chest', label: 'Peito (cm)', type: 'number', value: 0, step: 0.1, min: 0, section: 'Medidas' },
+                        { name: 'waist', label: 'Cintura (cm)', type: 'number', value: 0, step: 0.1, min: 0 },
+                        { name: 'hips', label: 'Quadril (cm)', type: 'number', value: 0, step: 0.1, min: 0 },
+                        { name: 'thigh', label: 'Coxa (cm)', type: 'number', value: 0, step: 0.1, min: 0 },
+                        { name: 'calf', label: 'Panturrilha (cm)', type: 'number', value: 0, step: 0.1, min: 0 },
+                        { name: 'biceps', label: 'Bíceps (cm)', type: 'number', value: 0, step: 0.1, min: 0 },
+
+                        { name: 'benchPress', label: 'Supino (kg)', type: 'number', value: 0, step: 0.5, min: 0, section: 'Performance' },
+                        { name: 'squat', label: 'Agachamento (kg)', type: 'number', value: 0, step: 0.5, min: 0 },
+                        { name: 'deadlift', label: 'Levantamento terra (kg)', type: 'number', value: 0, step: 0.5, min: 0 },
+
+                        { name: 'observations', label: 'Observações', type: 'textarea', placeholder: 'Opcional', section: 'Notas' }
+                    ]
+                });
+
+                if (!result) return;
+
+                const student = db.getStudentById(result.studentId);
                 if (!student) {
                     alert('❌ Aluno não encontrado.');
                     return;
                 }
 
-                const date = prompt('Data da avaliação (AAAA-MM-DD):', new Date().toISOString().split('T')[0]);
-                if (!date) return;
-
-                // Simple measurements prompt
-                const weight = prompt('Peso (kg):', '80');
-                const height = prompt('Altura (cm):', '170');
-
-                if (!weight || !height) return;
-
-                const weightNum = parseFloat(weight);
-                const heightNum = parseFloat(height);
-
-                if (isNaN(weightNum) || weightNum <= 0 || isNaN(heightNum) || heightNum <= 0) {
+                if (!result.weight || result.weight <= 0 || !result.height || result.height <= 0) {
                     alert('❌ Peso e altura devem ser valores válidos.');
                     return;
                 }
 
                 // Calculate basic metrics
-                const heightInM = heightNum / 100;
-                const imc = (weightNum / (heightInM * heightInM)).toFixed(1);
+                const heightInM = result.height / 100;
+                const imc = (result.weight / (heightInM * heightInM)).toFixed(1);
 
                 const newAssessment = {
                     studentId: student.id,
-                    date: date,
-                    weight: weightNum,
-                    height: heightNum,
+                    date: result.date,
+                    weight: result.weight,
+                    height: result.height,
                     imc: parseFloat(imc),
-                    bodyFat: parseFloat(prompt('% de Gordura (opcional):', '15')) || 0,
-                    muscleMass: parseFloat(prompt('Massa Muscular (kg, opcional):', '0')) || 0,
+                    bodyFat: result.bodyFat || 0,
+                    muscleMass: result.muscleMass || 0,
                     measurements: {
-                        chest: parseFloat(prompt('Peito (cm, opcional):', '0')) || 0,
-                        waist: parseFloat(prompt('Cintura (cm, opcional):', '0')) || 0,
-                        hips: parseFloat(prompt('Quadril (cm, opcional):', '0')) || 0,
-                        thigh: parseFloat(prompt('Coxa (cm, opcional):', '0')) || 0,
-                        calf: parseFloat(prompt('Panturrilha (cm, opcional):', '0')) || 0,
-                        biceps: parseFloat(prompt('Bíceps (cm, opcional):', '0')) || 0
+                        chest: result.chest || 0,
+                        waist: result.waist || 0,
+                        hips: result.hips || 0,
+                        thigh: result.thigh || 0,
+                        calf: result.calf || 0,
+                        biceps: result.biceps || 0
                     },
                     performance: {
-                        benchPress: parseFloat(prompt('Supino (kg, opcional):', '0')) || 0,
-                        squat: parseFloat(prompt('Agachamento (kg, opcional):', '0')) || 0,
-                        deadlift: parseFloat(prompt('Levantamento Terra (kg, opcional):', '0')) || 0
+                        benchPress: result.benchPress || 0,
+                        squat: result.squat || 0,
+                        deadlift: result.deadlift || 0
                     },
-                    observations: prompt('Observações (opcional):') || '',
+                    observations: result.observations || '',
                     trainer: "Administrador"
                 };
 

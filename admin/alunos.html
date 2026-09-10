@@ -6,6 +6,7 @@
     <title>Alunos - FitConsult Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="db.js"></script>
+    <script src="modal.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -382,34 +383,47 @@
             document.getElementById('planFilter').addEventListener('change', loadStudents);
 
             // Add student button
-            document.getElementById('addStudentBtn').addEventListener('click', function() {
-                // In a real implementation, this would open a modal/form
-                // For now, we'll show a simple prompt to demonstrate data persistence
-                const name = prompt('Nome do novo aluno:');
-                if (name && name.trim() !== '') {
-                    const objective = prompt('Objetivo do aluno (opcional):') || '';
-                    const plan = prompt('Plano (ex: Premium, Básico):') || 'Básico';
+            document.getElementById('addStudentBtn').addEventListener('click', async function() {
+                const today = new Date().toISOString().split('T')[0];
+                const nextWeek = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
 
-                    const newStudent = {
-                        name: name.trim(),
-                        objective: objective.trim(),
-                        plan: plan.trim(),
-                        status: 'Ativo',
-                        weeklyFrequency: 2,
-                        observations: 'Aluno recém-cadastrado',
-                        startDate: new Date().toISOString().split('T')[0],
-                        financialStatus: 'Em dia',
-                        lastAssessment: new Date().toISOString().split('T')[0], // Today as placeholder
-                        nextAppointment: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0] // 7 days from now
-                    };
+                const result = await openModal({
+                    title: 'Novo aluno',
+                    submitLabel: 'Cadastrar',
+                    fields: [
+                        { name: 'name', label: 'Nome', type: 'text', required: true, placeholder: 'Nome completo' },
+                        { name: 'plan', label: 'Plano', type: 'select', value: 'Básico', options: [
+                            { value: 'Básico', label: 'Básico' },
+                            { value: 'Premium', label: 'Premium' },
+                            { value: 'VIP', label: 'VIP' }
+                        ] },
+                        { name: 'weeklyFrequency', label: 'Frequência semanal', type: 'number', value: 2, min: 1, step: 1 },
+                        { name: 'startDate', label: 'Data de início', type: 'date', value: today },
+                        { name: 'objective', label: 'Objetivo', type: 'textarea', placeholder: 'Ex: Hipertrofia, emagrecimento...' }
+                    ]
+                });
 
-                    try {
-                        db.saveStudent(newStudent);
-                        alert('✅ Aluno cadastrado com sucesso!');
-                        loadStudents(); // Refresh the list
-                    } catch (error) {
-                        alert('❌ Erro ao cadastrar aluno: ' + error.message);
-                    }
+                if (!result) return;
+
+                const newStudent = {
+                    name: result.name.trim(),
+                    objective: (result.objective || '').trim(),
+                    plan: result.plan,
+                    status: 'Ativo',
+                    weeklyFrequency: result.weeklyFrequency || 2,
+                    observations: 'Aluno recém-cadastrado',
+                    startDate: result.startDate || today,
+                    financialStatus: 'Em dia',
+                    lastAssessment: today, // Today as placeholder
+                    nextAppointment: nextWeek // 7 days from now
+                };
+
+                try {
+                    db.saveStudent(newStudent);
+                    alert('✅ Aluno cadastrado com sucesso!');
+                    loadStudents(); // Refresh the list
+                } catch (error) {
+                    alert('❌ Erro ao cadastrar aluno: ' + error.message);
                 }
             });
         }

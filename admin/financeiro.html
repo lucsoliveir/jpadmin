@@ -6,6 +6,7 @@
     <title>Financeiro - FitConsult Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="db.js"></script>
+    <script src="modal.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -373,58 +374,56 @@
 
         function setupEventListeners() {
             // Add payment button
-            document.getElementById('addPaymentBtn').addEventListener('click', function() {
+            document.getElementById('addPaymentBtn').addEventListener('click', async function() {
                 const students = db.getStudents();
                 if (students.length === 0) {
                     alert('⚠️ Cadastre pelo menos um aluno antes de registrar pagamentos.');
                     return;
                 }
 
-                const studentNames = students.map(s => `${s.id}: ${s.name}`).join('\n');
-                const studentIdStr = prompt(`Selecione o aluno pelo ID:\n\n${studentNames}`);
+                const paymentMethodOptions = ['Dinheiro', 'PIX', 'Cartão de Crédito', 'Cartão de Débito', 'Boleto', 'Transferência'];
+                const statusOptions = ['Pago', 'Pendente', 'Atrasado', 'Cancelado'];
+                const today = new Date().toISOString().split('T')[0];
+                const in30Days = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
 
-                if (studentIdStr === null) return;
+                const result = await openModal({
+                    title: 'Novo pagamento',
+                    submitLabel: 'Registrar pagamento',
+                    fields: [
+                        { name: 'studentId', label: 'Aluno', type: 'select', required: true, numeric: true, placeholder: 'Selecione o aluno',
+                          options: students.map(s => ({ value: s.id, label: s.name })) },
+                        { name: 'amount', label: 'Valor (R$)', type: 'number', required: true, step: 0.01, min: 0.01, placeholder: '299.99' },
+                        { name: 'date', label: 'Data do pagamento', type: 'date', required: true, value: today },
+                        { name: 'dueDate', label: 'Data de vencimento', type: 'date', required: true, value: in30Days },
+                        { name: 'paymentMethod', label: 'Forma de pagamento', type: 'select', value: 'PIX',
+                          options: paymentMethodOptions.map(t => ({ value: t, label: t })) },
+                        { name: 'status', label: 'Status', type: 'select', value: 'Pendente',
+                          options: statusOptions.map(t => ({ value: t, label: t })) },
+                        { name: 'observations', label: 'Observações', type: 'textarea', placeholder: 'Opcional' }
+                    ]
+                });
 
-                const studentId = parseInt(studentIdStr);
-                const student = db.getStudentById(studentId);
+                if (!result) return;
 
+                const student = db.getStudentById(result.studentId);
                 if (!student) {
                     alert('❌ Aluno não encontrado.');
                     return;
                 }
 
-                const amountStr = prompt('Valor do pagamento (ex: 299.99):');
-                if (!amountStr) return;
-                const amount = parseFloat(amountStr);
-                if (isNaN(amount) || amount <= 0) {
+                if (!result.amount || result.amount <= 0) {
                     alert('❌ Valor inválido.');
                     return;
                 }
 
-                const date = prompt('Data do pagamento (AAAA-MM-DD):', new Date().toISOString().split('T')[0]);
-                if (!date) return;
-
-                const dueDate = prompt('Data de vencimento (AAAA-MM-DD):', new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]);
-                if (!dueDate) return;
-
-                const paymentMethodOptions = ['Dinheiro', 'PIX', 'Cartão de Crédito', 'Cartão de Débito', 'Boleto', 'Transferência'];
-                const paymentMethod = prompt(`Forma de pagamento:\n${paymentMethodOptions.map((t, i) => `${i+1}. ${t}`).join('\n')}`, 'PIX');
-                if (!paymentMethod) return;
-
-                const statusOptions = ['Pago', 'Pendente', 'Atrasado', 'Cancelado'];
-                const status = prompt(`Status:\n${statusOptions.map((t, i) => `${i+1}. ${t}`).join('\n')}`, 'Pendente');
-                if (!status) return;
-
-                const observations = prompt('Observações (opcional):') || '';
-
                 const newPayment = {
                     studentId: student.id,
-                    amount: amount,
-                    date: date,
-                    dueDate: dueDate,
-                    paymentMethod: paymentMethod,
-                    status: status,
-                    observations: observations
+                    amount: result.amount,
+                    date: result.date,
+                    dueDate: result.dueDate,
+                    paymentMethod: result.paymentMethod,
+                    status: result.status,
+                    observations: result.observations || ''
                 };
 
                 try {

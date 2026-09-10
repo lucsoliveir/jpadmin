@@ -6,6 +6,7 @@
     <title>Treinos - FitConsult Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="db.js"></script>
+    <script src="modal.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -181,49 +182,39 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('addWorkoutBtn').addEventListener('click', function() {
+            document.getElementById('addWorkoutBtn').addEventListener('click', async function() {
                 const students = db.getStudents();
                 if (students.length === 0) {
                     alert('⚠️ Cadastre pelo menos um aluno antes de criar treinos.');
                     return;
                 }
 
-                const studentNames = students.map(s => `${s.id}: ${s.name}`).join('\n');
-                const studentIdStr = prompt(`Selecione o aluno pelo ID:\n\n${studentNames}`);
+                const result = await openModal({
+                    title: 'Novo treino',
+                    subtitle: 'Sistema simplificado de demonstração. Na versão completa: biblioteca de exercícios por grupo muscular, controle de séries/repetições/carga/descanso, reordenação por arraste, vídeos demonstrativos e versões do treino.',
+                    submitLabel: 'Criar treino',
+                    fields: [
+                        { name: 'studentId', label: 'Aluno', type: 'select', required: true, numeric: true, placeholder: 'Selecione o aluno',
+                          options: students.map(s => ({ value: s.id, label: s.name })) },
+                        { name: 'workoutName', label: 'Nome do treino', type: 'text', required: true, placeholder: 'Ex: Treino A - Força Superior' },
+                        { name: 'objective', label: 'Objetivo', type: 'text', value: 'Gerais', placeholder: 'Ex: Hipertrofia, Emagrecimento' },
+                        { name: 'addExercises', label: 'Adicionar exercícios básicos agora', type: 'checkbox', value: true }
+                    ]
+                });
 
-                if (studentIdStr === null) return;
+                if (!result) return;
 
-                const studentId = parseInt(studentIdStr);
-                const student = db.getStudentById(studentId);
-
+                const student = db.getStudentById(result.studentId);
                 if (!student) {
                     alert('❌ Aluno não encontrado.');
                     return;
                 }
 
-                const workoutName = prompt('Nome do treino (ex: Treino A - Força Superior):');
-                if (!workoutName) return;
-
-                const objective = prompt('Objetivo do treino (ex: Hipertrofia, Emagrecimento):') || 'Gerais';
-
-                // Simple demonstration - in reality this would open a full workout builder
-                const exercisesPrompt = `
-Adicionar exercícios básicos? (responda com sim ou não)
-
-Este é um sistema simplificado de demonstração.
-Na versão completa, você teria um construtor de treinos com:
-• Biblioteca de exercícios comgrupos musculares
-• Controle de séries, repetições, carga, descanso
-• Arraste e solte para reordenar exercícios
-• Vídeos demonstrativos
-• Controle de versões do treino
-                `;
-
-                const addExercises = prompt(exercisesPrompt, 'sim')?.toLowerCase() === 'sim';
+                const workoutName = result.workoutName;
 
                 const newWorkout = {
                     name: workoutName,
-                    objective: objective,
+                    objective: result.objective || 'Gerais',
                     status: 'Ativo',
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()

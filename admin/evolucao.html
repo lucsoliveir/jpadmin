@@ -6,6 +6,7 @@
     <title>Evolução - FitConsult Admin</title>
     <link rel="stylesheet" href="style.css">
     <script src="db.js"></script>
+    <script src="modal.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -190,19 +191,23 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('viewEvolutionBtn').addEventListener('click', function() {
+            document.getElementById('viewEvolutionBtn').addEventListener('click', async function() {
                 const students = db.getStudents();
                 if (students.length === 0) {
                     alert('⚠️ Cadastre pelo menos um aluno antes de ver a evolução.');
                     return;
                 }
 
-                const studentNames = students.map(s => `${s.id}: ${s.name}`).join('\n');
-                const studentIdStr = prompt(`Selecione o aluno pelo ID para ver sua evolução:\n\n${studentNames}`);
+                const studentId = await openSelectModal({
+                    title: 'Ver evolução',
+                    label: 'Aluno',
+                    placeholder: 'Selecione o aluno',
+                    submitLabel: 'Ver evolução',
+                    options: students.map(s => ({ value: s.id, label: s.name }))
+                });
 
-                if (studentIdStr === null) return;
+                if (studentId === null) return;
 
-                const studentId = parseInt(studentIdStr);
                 const student = db.getStudentById(studentId);
 
                 if (!student) {
