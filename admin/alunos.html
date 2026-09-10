@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alunos - FitConsult Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="db.js"></script>
+    <script>
+        // Protecao de sessao: bloqueia acesso direto sem login
+        if (sessionStorage.getItem('fitconsult_admin_logged') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <h2>FitConsult</h2>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="alunos.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Alunos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="agenda.html" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Agenda</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="treinos.html" class="nav-link">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Treinos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="avaliacoes.html" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Avaliações</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="evolucao.html" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Evolução</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="financeiro.html" class="nav-link">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Financeiro</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="relatorios.html" class="nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="configuracoes.html" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <img src="https://via.placeholder.com/44" alt="Admin" class="admin-avatar">
+                <div class="admin-info">
+                    <h3>Administrador</h3>
+                    <p>Último acesso: hoje</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left">
+                <button class="sidebar-toggle-mobile" id="sidebarToggleMobile">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Alunos</h1>
+            </div>
+
+            <div class="header-right">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar alunos...">
+                    <i class="fas fa-search"></i>
+                </div>
+
+                <div class="notifications">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+
+                <div class="user-profile">
+                    <img src="https://via.placeholder.com/48" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Administrador</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <button id="logoutBtn" title="Sair" style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:0.9rem;">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard-content" style="padding: 30px;">
+            <!-- Header with actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2>Gerenciamento de Alunos</h2>
+                    <p class="stat-label" style="color: var(--ink-dim); margin-top: 5px;">
+                        {{totalStudents}} alunos cadastrados
+                    </p>
+                </div>
+                <button id="addStudentBtn" class="login-btn" style="padding: 12px 25px;">
+                    <i class="fas fa-user-plus"></i> Novo Aluno
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div style="background: var(--glass); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 25px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; color: var(--ink-dim); font-size: 0.9rem;">Status</label>
+                        <select id="statusFilter" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--glass); color: var(--ink); min-width: 120px;">
+                            <option value="all">Todos</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="pausado">Pausado</option>
+                            <option value="inativo">Inativo</option>
+                            <option value="encerrado">Encerrado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; color: var(--ink-dim); font-size: 0.9rem;">Plano</label>
+                        <select id="planFilter" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--glass); color: var(--ink); min-width: 120px;">
+                            <option value="all">Todos os Planos</option>
+                            <option value="premium">Premium</option>
+                            <option value="basico">Básico</option>
+                            <option value="experimental">Experimental</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students table -->
+            <div style="background: var(--glass); border-radius: var(--radius-lg); overflow: hidden;">
+                <div id="studentsTableContainer">
+                    <!-- Table will be injected here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStudents();
+            setupEventListeners();
+            updateNotificationCount();
+        });
+
+        function loadStudents() {
+            const students = db.getStudents();
+            const tableContainer = document.getElementById('studentsTableContainer');
+
+            // Apply filters
+            const filteredStudents = applyFilters(students);
+
+            // Update header count
+            document.querySelector('.stat-label').textContent =
+                `${filteredStudents.length} alunos cadastrados`;
+
+            if (filteredStudents.length === 0) {
+                tableContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--ink-dim);">
+                        <i class="fas fa-user-slash" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <p>Nenhum aluno encontrado. Clique em "Novo Aluno" para começar.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Create table
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'separate';
+            table.style.borderSpacing = '0';
+
+            // Table header
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Foto</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Nome</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Objetivo</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Plano</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Status</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Últ. Avaliação</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Próx. Atendimento</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Financeiro</th>
+                        <th style="text-align: left; padding: 15px 20px; border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink);">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+
+            filteredStudents.forEach(student => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid rgba(242,241,236,0.05)';
+                tr.style.transition = 'background-color 0.2s ease';
+
+                tr.onmouseover = function() { this.style.backgroundColor = 'var(--glass-strong)'; };
+                tr.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+
+                tr.onclick = function() {
+                    // Navigate to student profile (we'll implement this later)
+                    alert(`Visualizando perfil de ${student.name}\nEm implementação: página de perfil do aluno`);
+                };
+
+                // Format dates
+                const lastAssessment = student.lastAssessment ?
+                    new Date(student.lastAssessment).toLocaleDateString('pt-BR') :
+                    'Nunca';
+
+                const nextAppointment = student.nextAppointment ?
+                    new Date(student.nextAppointment).toLocaleDateString('pt-BR') :
+                    'Nenhum';
+
+                // Status badge
+                let statusClass = 'status-pausado';
+                let statusText = student.status;
+                switch(student.status) {
+                    case 'Ativo': statusClass = 'status-ativo'; break;
+                    case 'Inativo': statusClass = 'status-inativo'; break;
+                    case 'Encerrado': statusClass = 'status-encerrado'; break;
+                    default: statusClass = 'status-pausado';
+                }
+
+                // Financial status
+                let financeClass = 'finance-em-dia';
+                let financeText = student.financialStatus;
+                if (student.financialStatus === 'Atrasado') {
+                    financeClass = 'finance-atrasado';
+                } else if (student.financialStatus === 'Pendente') {
+                    financeClass = 'finance-pendente';
+                }
+
+                tr.innerHTML = `
+                    <td style="padding: 15px 20px;">
+                        <img src="${student.avatar || 'https://via.placeholder.com/50'}"
+                             alt="${student.name}"
+                             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);">
+                    </td>
+                    <td style="padding: 15px 20px; font-weight: 600; color: var(--ink);">${student.name}</td>
+                    <td style="padding: 15px 20px; color: var(--ink-dim);">${student.objective || '-'}</td>
+                    <td style="padding: 15px 20px; color: var(--ink-dim);">${student.plan || '-'}</td>
+                    <td style="padding: 15px 20px;">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                    <td style="padding: 15px 20px; color: var(--ink-dim);">${lastAssessment}</td>
+                    <td style="padding: 15px 20px; color: var(--ink-dim);">${nextAppointment}</td>
+                    <td style="padding: 15px 20px;">
+                        <span class="finance-badge ${financeClass}">${financeText}</span>
+                    </td>
+                    <td style="padding: 15px 20px; display: flex; gap: 10px;">
+                        <button class="action-btn view" data-id="${student.id}" title="Visualizar">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" data-id="${student.id}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" data-id="${student.id}" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            tableContainer.innerHTML = '';
+            tableContainer.appendChild(table);
+
+            // Add action button listeners
+            document.querySelectorAll('.action-btn.view').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const studentId = parseInt(this.getAttribute('data-id'));
+                    alert(`Visualizando aluno ID: ${studentId}\nEm implementação: modal de visualização`);
+                });
+            });
+
+            document.querySelectorAll('.action-btn.edit').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const studentId = parseInt(this.getAttribute('data-id'));
+                    alert(`Editando aluno ID: ${studentId}\nEm implementação: formulário de edição`);
+                });
+            });
+
+            document.querySelectorAll('.action-btn.delete').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const studentId = parseInt(this.getAttribute('data-id'));
+                    const student = db.getStudentById(studentId);
+                    if (student && confirm(`Tem certeza que deseja excluir o aluno "${student.name}"? Esta ação não pode ser desfeita.`)) {
+                        if (db.deleteStudent(studentId)) {
+                            alert('Aluno excluído com sucesso!');
+                            loadStudents(); // Refresh list
+                        } else {
+                            alert('Erro ao excluir aluno.');
+                        }
+                    }
+                });
+            });
+        }
+
+        function applyFilters(students) {
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+            const planFilter = document.getElementById('planFilter')?.value || 'all';
+
+            return students.filter(student => {
+                // Search filter
+                if (searchTerm &&
+                    !student.name.toLowerCase().includes(searchTerm) &&
+                    !student.objective.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+
+                // Status filter
+                if (statusFilter !== 'all' && student.status.toLowerCase() !== statusFilter) {
+                    return false;
+                }
+
+                // Plan filter
+                if (planFilter !== 'all' && student.plan.toLowerCase() !== planFilter) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        function setupEventListeners() {
+            // Search
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    // Debounce for better performance
+                    clearTimeout(this.debounceTimer);
+                    this.debounceTimer = setTimeout(() => {
+                        loadStudents();
+                    }, 300);
+                });
+            }
+
+            // Filters
+            document.getElementById('statusFilter').addEventListener('change', loadStudents);
+            document.getElementById('planFilter').addEventListener('change', loadStudents);
+
+            // Add student button
+            document.getElementById('addStudentBtn').addEventListener('click', function() {
+                // In a real implementation, this would open a modal/form
+                // For now, we'll show a simple prompt to demonstrate data persistence
+                const name = prompt('Nome do novo aluno:');
+                if (name && name.trim() !== '') {
+                    const objective = prompt('Objetivo do aluno (opcional):') || '';
+                    const plan = prompt('Plano (ex: Premium, Básico):') || 'Básico';
+
+                    const newStudent = {
+                        name: name.trim(),
+                        objective: objective.trim(),
+                        plan: plan.trim(),
+                        status: 'Ativo',
+                        weeklyFrequency: 2,
+                        observations: 'Aluno recém-cadastrado',
+                        startDate: new Date().toISOString().split('T')[0],
+                        financialStatus: 'Em dia',
+                        lastAssessment: new Date().toISOString().split('T')[0], // Today as placeholder
+                        nextAppointment: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0] // 7 days from now
+                    };
+
+                    try {
+                        db.saveStudent(newStudent);
+                        alert('✅ Aluno cadastrado com sucesso!');
+                        loadStudents(); // Refresh the list
+                    } catch (error) {
+                        alert('❌ Erro ao cadastrar aluno: ' + error.message);
+                    }
+                }
+            });
+        }
+
+        function updateNotificationCount() {
+            const count = db.getNotifications().filter(n => !n.isRead).length;
+            document.getElementById('notificationCount').textContent = count;
+        }
+
+        // Sidebar toggle functionality (reused)
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.style.width = '80px';
+                mainContent.style.marginLeft = '80px';
+                document.querySelectorAll('.sidebar-logo h2, .sidebar-nav .nav-link span, .sidebar-footer .admin-info').forEach(el => {
+                    el.style.display = 'none';
+                });
+            } else {
+                sidebar.style.width = '280px';
+                mainContent.style.marginLeft = '280px';
+                document.querySelectorAll('.sidebar-logo h2, .sidebar-nav .nav-link span, .sidebar-footer .admin-info').forEach(el => {
+                    el.style.display = 'block';
+                });
+            }
+        });
+
+        sidebarToggleMobile.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-open');
+            if (sidebar.classList.contains('mobile-open')) {
+                sidebar.style.width = '280px';
+                sidebar.style.visibility = 'visible';
+            } else {
+                sidebar.style.width = '0';
+                sidebar.style.visibility = 'hidden';
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!sidebar.contains(e.target) && !sidebarToggleMobile.contains(e.target) && sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                sidebar.style.width = '0';
+                sidebar.style.visibility = 'hidden';
+            }
+        });
+    
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                sessionStorage.removeItem('fitconsult_admin_logged');
+                window.location.href = 'index.html';
+            });
+        }
+</script>
+
+    <style>
+        /* Status badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .status-ativo { background: rgba(0,250,154,0.2); color: #00fa9a; }
+        .status-pausado { background: rgba(255,165,0,0.2); color: #ffa500; }
+        .status-inativo { background: rgba(255,69,0,0.2); color: #ff4500; }
+        .status-encerrado { background: rgba(128,128,128,0.2); color: #808080; }
+
+        /* Finance badges */
+        .finance-badge {
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .finance-em-dia { background: rgba(0,250,154,0.2); color: #00fa9a; }
+        .finance-pendente { background: rgba(255,165,0,0.2); color: #ffa500; }
+        .finance-atrasado { background: rgba(255,69,0,0.2); color: #ff4500; }
+
+        /* Action buttons */
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--ink-dim);
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            background: var(--glass-strong);
+            color: var(--ink);
+        }
+        .action-btn.view:hover { color: var(--accent); }
+        .action-btn.edit:hover { color: #00d4ff; }
+        .action-btn.delete:hover { color: var(--danger-color); }
+    </style>
+</body>
+</html>

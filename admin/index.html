@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FitConsult Admin</title>
+    <style>
+        :root{
+            --bg: #08080a;
+            --bg-alt: #0d0e11;
+            --ink: #f2f1ec;
+            --ink-dim: #9a978f;
+            --ink-faint: #58564f;
+            --line: rgba(242,241,236,0.09);
+            --line-strong: rgba(242,241,236,0.16);
+            --glass: rgba(242,241,236,0.035);
+            --glass-strong: rgba(242,241,236,0.06);
+            --accent: #c79a5b;
+            --accent-dim: rgba(199,154,91,0.35);
+            --radius-lg: 28px;
+            --radius-md: 18px;
+            --radius-sm: 10px;
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html{scroll-behavior:smooth;}
+        body{
+            background: var(--bg);
+            color: var(--ink);
+            font-family:'Inter', sans-serif;
+            font-size:16px;
+            line-height:1.6;
+            -webkit-font-smoothing:antialiased;
+            overflow-x:hidden;
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .login-container{
+            background: var(--glass);
+            backdrop-filter: blur(10px) saturate(140%);
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        .login-header{
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1{
+            color: var(--ink);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--accent), #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-header p{
+            color: var(--ink-dim);
+            font-size: 1.1rem;
+        }
+
+        .form-group{
+            margin-bottom: 25px;
+        }
+
+        .form-group label{
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ink);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-group input{
+            width: 100%;
+            padding: 14px;
+            background: var(--glass);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            color: var(--ink);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus{
+            outline: none;
+            border-color: var(--accent);
+            background: var(--glass-strong);
+            box-shadow: 0 0 0 3px rgba(199,154,91,0.2);
+        }
+
+        .form-group input::placeholder{
+            color: var(--ink-dim);
+        }
+
+        .login-btn{
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(180deg, rgba(199,154,91,0.95), rgba(170,124,66,0.95));
+            border: none;
+            border-radius: 100px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0a0906;
+            cursor: pointer;
+            transform: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
+            white-space:nowrap;
+        }
+
+        .login-btn:hover{
+            transform:translateY(-2px);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 18px 34px -12px rgba(199,154,91,0.7);
+        }
+
+        .login-btn:active{
+            transform:translateY(0);
+        }
+
+        .footer-text{
+            text-align: center;
+            margin-top: 25px;
+            color: var(--ink-dim);
+            font-size: 0.9rem;
+        }
+
+        .error-message{
+            background: rgba(199,154,91,0.1);
+            border: 1px solid rgba(199,154,91,0.3);
+            color: #ff9e80;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @keyframes pulse{
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .loading{
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes shake{
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>FitConsult</h1>
+            <p>Painel Administrativo</p>
+        </div>
+
+        <div id="errorMessage" class="error-message">
+            Senha incorreta. Tente novamente.
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="password">Senha de Acesso</label>
+                <input type="password" id="password" placeholder="Digite sua senha" autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                Entrar no Painel
+            </button>
+        </form>
+
+        <div class="footer-text">
+            Sistema interno de gestão para consultoria de performance física
+        </div>
+    </div>
+
+    <script>
+        // Se já estiver logado nesta sessão, pula direto para o dashboard
+        if (sessionStorage.getItem('fitconsult_admin_logged') === 'true') {
+            window.location.href = 'dashboard.html';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const password = passwordInput.value.trim();
+
+            if (password === 'jppoubel01') {
+                loginBtn.innerHTML = '<span class="loading">Entrando...</span>';
+                loginBtn.disabled = true;
+
+                // Marca a sessão como autenticada (protege o acesso direto às demais páginas)
+                sessionStorage.setItem('fitconsult_admin_logged', 'true');
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                errorMessage.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+                passwordInput.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    passwordInput.style.animation = '';
+                }, 500);
+            }
+        });
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').submit();
+            }
+        });
+
+        document.getElementById('password').focus();
+    </script>
+</body>
+</html>
